@@ -50,15 +50,28 @@ def consume():
         launch_request.url,
         headers=launch_request.headers, data=launch_request.body,
         allow_redirects=False, verify=False)
-
-    # RA will generate an HTML page with a link in it; we'll pull that link out
-    # and display it so you can copy-and-paste
-    pat = re.compile('action="([^"]+)"')
-    matches = pat.search(response.text)
-    if matches:
-        print(matches.group(1))
+    print("Status: {}".format(response.status_code))
+    if response.status_code == 302:
+        for header in sorted(response.headers):
+            print("  {}: {}".format(header, response.headers[header]))
+        if 'Location' in response.headers:
+            print(response.headers['Location'])
+        else:
+            pat = re.compile('href="([^"]+)"')
+            matches = pat.search(response.text)
+            if matches:
+                print(matches.group(1))
+            else:
+                print("Failed to find link in body\n{}".format(response.text))
     else:
-        print("Failed to find link in response text! Status: {}\n{}".format(response.status_code, response.text))
+        # RA will generate an HTML page with a link in it; we'll pull that link out
+        # and display it so you can copy-and-paste
+        pat = re.compile('action="([^"]+)"')
+        matches = pat.search(response.text)
+        if matches:
+            print(matches.group(1))
+        else:
+            print("Failed to find link in response text! Status: {}\n{}".format(response.status_code, response.text))
 
 
 if __name__ == '__main__':
